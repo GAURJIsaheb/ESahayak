@@ -17,10 +17,11 @@ export default function Login() {
       redirect: false,
       email,
       password,
+      
     })
     if (res?.ok) {
       toast.success("Logged in!")
-      router.push("/buyers")
+      router.replace("/buyers")
     } else {
       toast.error("Invalid credentials")
     }

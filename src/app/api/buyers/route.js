@@ -22,13 +22,12 @@ export async function POST(req) {
         source: data.source,
         notes: data.notes || null,
         tags: (() => {
-          if (!data.tags) return [];
-          try {
-            return JSON.parse(data.tags); // valid JSON array
-          } catch {
-            return data.tags.split(",").map((t) => t.trim()); // fallback
-          }
-        })(),
+        if (!data.tags) return [];
+        if (Array.isArray(data.tags)) return data.tags;
+        if (typeof data.tags === "string") return data.tags.split(",").map(t => t.trim());
+        return [];
+      })(),
+
         ownerId: data.ownerId, // pass from logged-in user
       },
     });

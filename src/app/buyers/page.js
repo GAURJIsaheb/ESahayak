@@ -6,9 +6,7 @@ import { redirect } from 'next/navigation'
 
 export default async function Buyers({ searchParams }) {
   const session = await getSession()
-  if (!session) {
-    redirect('/auth/login')
-  }
+  if (!session) redirect("/auth/login")
 
   const page = parseInt(searchParams.page || '1')
   const limit = 10

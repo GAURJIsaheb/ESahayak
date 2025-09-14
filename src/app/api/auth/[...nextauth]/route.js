@@ -21,12 +21,11 @@ export const authOptions = {
 
         if (!user) return null
 
-        // ✅ plain text password check
+
         if (credentials.password !== user.password) {
           return null
         }
 
-        // return minimal safe object → becomes session.user
         return {
           id: user.id,
           email: user.email,
