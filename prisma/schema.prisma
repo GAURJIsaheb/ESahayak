@@ -1,0 +1,108 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id     String  @id @default(uuid())
+  email  String  @unique
+  name   String
+  role   String  @default("user") // "user" or "admin"
+  password String  
+  buyers Buyer[]
+}
+
+model Buyer {
+  id           String        @id @default(uuid())
+  fullName     String
+  email        String?
+  phone        String
+  city         City
+  propertyType PropertyType
+  bhk          Bhk?
+  purpose      Purpose
+  budgetMin    Int?
+  budgetMax    Int?
+  timeline     Timeline
+  source       Source
+  status       Status        @default(New)
+  notes        String?       @db.Text
+  tags         String[]      @db.Text
+  ownerId      String
+  updatedAt    DateTime      @updatedAt
+
+  owner        User          @relation(fields: [ownerId], references: [id])
+  history      BuyerHistory[]
+
+  @@map("buyers")
+}
+
+model BuyerHistory {
+  id        String   @id @default(uuid())
+  buyerId   String
+  changedBy String
+  changedAt DateTime @default(now())
+  diff      Json
+
+  buyer Buyer @relation(fields: [buyerId], references: [id])
+
+  @@map("buyer_history")
+}
+
+enum City {
+  Chandigarh
+  Mohali
+  Zirakpur
+  Panchkula
+  Other
+}
+
+enum PropertyType {
+  Apartment
+  Villa
+  Plot
+  Office
+  Retail
+}
+
+enum Bhk {
+  Studio
+  Bhk1 @map("1")
+  Bhk2 @map("2")
+  Bhk3 @map("3")
+  Bhk4 @map("4")
+}
+
+enum Purpose {
+  Buy
+  Rent
+}
+
+enum Timeline {
+  ZeroToThreeMonths @map("0-3m")
+  ThreeToSixMonths  @map("3-6m")
+  MoreThanSixMonths @map(">6m")
+  Exploring
+}
+
+enum Source {
+  Website
+  Referral
+  WalkIn @map("Walk-in")
+  Call
+  Other
+}
+
+enum Status {
+  New
+  Qualified
+  Contacted
+  Visited
+  Negotiation
+  Converted
+  Dropped
+}
