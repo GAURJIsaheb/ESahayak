@@ -1,40 +1,22 @@
-import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 
-export async function GET(request) {
-  const { searchParams } = new URL(request.url)
-  const where = {} // Build from params as before
+export async function GET() {
+  const buyers = await prisma.buyer.findMany();
 
-  const buyers = await prisma.buyer.findMany({ where })
+  // Header row
+  let csv = "fullName,email,phone,city,propertyType,bhk,purpose,budgetMin,budgetMax,timeline,source,notes,tags,status\n";
 
-  const csv = buyers.map(b => ({
-    fullName: b.fullName,
-    email: b.email,
-    phone: b.phone,
-    city: b.city,
-    propertyType: b.propertyType,
-    bhk: b.bhk,
-    purpose: b.purpose,
-    budgetMin: b.budgetMin,
-    budgetMax: b.budgetMax,
-    timeline: b.timeline,
-    source: b.source,
-    notes: b.notes,
-    tags: b.tags.join(','),
-    status: b.status,
-  }))
+  // Data rows
+  buyers.forEach((b) => {
+    csv += `${b.fullName},${b.email},${b.phone},${b.city},${b.propertyType},${b.bhk || ""},${b.purpose},${b.budgetMin},${b.budgetMax},${b.timeline},${b.source},${b.notes || ""},${b.tags || ""},${b.status}\n`;
+  });
 
-  // Use Papa unparse or simple string
-  const headers = Object.keys(csv[0])
-  let csvContent = headers.join(',') + '\n'
-  csv.forEach(row => {
-    csvContent += headers.map(h => `"${row[h] || ''}"`).join(',') + '\n'
-  })
-
-  return new NextResponse(csvContent, {
+  return new Response(csv, {
+    status: 200,
     headers: {
-      'Content-Type': 'text/csv',
-      'Content-Disposition': 'attachment; filename="buyers.csv"',
+      "Content-Type": "text/csv",
+      "Content-Disposition": "attachment; filename=buyers.csv",
     },
-  })
+  });
 }

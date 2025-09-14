@@ -77,6 +77,7 @@ export default function BuyerTable({ initialData, session }) {
           aria-label="Search"
         />
         <CsvImport />
+
       </div>
       <div className="mb-4 flex text-black space-x-4">
         <select value={filters.city} onChange={(e) => updateFilter('city', e.target.value)} className="p-2 border">

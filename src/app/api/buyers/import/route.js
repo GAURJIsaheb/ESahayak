@@ -1,28 +1,35 @@
-import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
-import { getSession } from '@/lib/auth'
-import { csvBuyerSchema } from '@/lib/validation'
+import { NextResponse } from "next/server";
+import { PrismaClient } from "@prisma/client";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "../../auth/[...nextauth]/route";
 
-export async function POST(request) {
-  const session = await getSession()
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+const prisma = new PrismaClient();
 
-  const rows = await request.json()
-
+export async function POST(req) {
   try {
-    await prisma.$transaction(async (tx) => {
-      for (const row of rows) {
-        const data = csvBuyerSchema.parse(row)
-        await tx.buyer.create({
-          data: {
-            ...data,
-            ownerId: session.userId,
-          },
-        })
-      }
-    })
-    return NextResponse.json({ success: true })
-  } catch (err) {
-    return NextResponse.json({ error: err.message }, { status: 400 })
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const data = await req.json();
+
+    const buyers = data.map(b => ({
+      ...b,
+      ownerId: session.user.id,
+      bhk: b.bhk || null,
+      timeline: b.timeline || "Exploring",
+      status: b.status || "New",
+    }));
+
+    const result = await prisma.buyer.createMany({
+      data: buyers,
+      skipDuplicates: true,
+    });
+
+    return NextResponse.json(result, { status: 201 });
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
